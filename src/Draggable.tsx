@@ -1,14 +1,13 @@
 import { useDraggable } from "@dnd-kit/core";
 import { Card } from "./App";
 import { ZoomTransform } from "d3-zoom";
-import { RefObject } from "react";
 
 export const Draggable = ({
   card,
-  transformRef
+  canvasTransform
 }: {
   card: Card | undefined;
-  transformRef: RefObject<ZoomTransform>
+  canvasTransform: ZoomTransform
 }) => {
   const {
     attributes,
@@ -32,7 +31,7 @@ export const Draggable = ({
         ...(transform
           ? {
             // temporary change to this position when dragging
-            transform: `translateX(${transform.x / (transformRef.current?.k ?? 1)}px) translateY(${transform.y / (transformRef.current?.k ?? 1)}px)`,
+            transform: `translateX(${transform.x / (canvasTransform.k)}px) translateY(${transform.y / (canvasTransform.k)}px)`,
           }
           : {}),
       }}

@@ -11,32 +11,29 @@ import { AllCards } from "./AllCards";
 export const Canvas = memo(({
   cards,
   setCards,
-  transformRef,
-  // setTransform,
+  transform,
+  setTransform,
 }: {
   cards: Card[];
   setCards: (cards: Card[]) => void;
-  transformRef: React.MutableRefObject<ZoomTransform>;
-  // setTransform(transform: ZoomTransform): void;
+  transform: ZoomTransform;
+  setTransform(transform: ZoomTransform): void;
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
+  const [disableMouseEnter, setDisableMouseEnter] = useState(false);
 
   const [hoverCard, setHoverCard] = useState<Card | undefined>(undefined)
 
 
   const setDragging = useCallback(() => {
-    setIsDragging(true);
+    setDisableMouseEnter(true);
     console.log('startDragging');
     performance.clearMarks();
     performance.clearMeasures();
     performance.mark('startDraggingStart');
-  }, [setIsDragging])
+  }, [setDisableMouseEnter])
 
-  // remove transform from the dependencies and use a ref, this is an event so can use a ref
-  // without a problem. This gives the DndContext less reasons to rerender, and means the cache 
-  // check is a tiny bit quicker.
   const updateDraggedCardPosition = useCallback(({ delta, active }: DragEndEvent) => {
-    setIsDragging(false);
+    setDisableMouseEnter(false);
 
     if (!delta.x && !delta.y) return;
 
@@ -52,8 +49,8 @@ export const Canvas = memo(({
           const newCard = {
             ...card,
             coordinates: {
-              x: card.coordinates.x + delta.x / (transformRef.current?.k ?? 1),
-              y: card.coordinates.y + delta.y / (transformRef.current?.k ?? 1),
+              x: card.coordinates.x + delta.x / (transform.k ?? 1),
+              y: card.coordinates.y + delta.y / (transform.k ?? 1),
             },
           };
 
@@ -64,7 +61,7 @@ export const Canvas = memo(({
       })
     );
 
-  }, [cards, setCards, transformRef]);
+  }, [cards, setCards, transform]);
 
   const { setNodeRef } = useDroppable({
     id: "canvas",
@@ -109,7 +106,6 @@ export const Canvas = memo(({
   // update the transform when d3 zoom notifies of a change
   const updateTransform = useCallback(
     ({ transform }: { transform: ZoomTransform }) => {
-      // setTransform(transform);
 
       try {
         performance.mark('zoomingOrPanningEnd');
@@ -121,17 +117,9 @@ export const Canvas = memo(({
       performance.clearMeasures();
       performance.mark('zoomingOrPanningStart');
 
-
-      const canvasElement = document.getElementById('canvas');
-      if (canvasElement) {
-        canvasElement.style.transform = `translateX(${transform.x}px) translateY(${transform.y}px) scale(${transform.k})`;
-      }
-
-      transformRef.current = transform;
+      setTransform(transform);
     },
-    [
-      // setTransform
-    ]
+    [setTransform]
   );
   useEffect(() => {
     try {
@@ -155,17 +143,11 @@ export const Canvas = memo(({
       performance.clearMeasures();
       performance.mark('zoomingOrPanningStart');
 
-      const canvasInnerElement = document.getElementById('canvasInner');
-      if (canvasInnerElement) {
-        canvasInnerElement.style.pointerEvents = "none";
-      }
+      setDisableMouseEnter(true);
     }
     );
     zoomBehavior.on("end", () => {
-      const canvasInnerElement = document.getElementById('canvasInner');
-      if (canvasInnerElement) {
-        canvasInnerElement.style.pointerEvents = "auto";
-      }
+      setDisableMouseEnter(false);
     });
 
     // attach d3 zoom to the canvas div element, which will handle
@@ -181,7 +163,7 @@ export const Canvas = memo(({
         style={{
           // apply the transform from d3
           transformOrigin: "top left",
-          transform: `translateX(${transformRef.current?.x ?? 0}px) translateY(${transformRef.current?.y ?? 0}px) scale(${transformRef.current?.k ?? 1})`,
+          transform: `translateX(${transform.x}px) translateY(${transform.y}px) scale(${transform.k})`,
           position: "relative",
           height: "600px",
         }}
@@ -191,12 +173,13 @@ export const Canvas = memo(({
           // and it outpaces the card, which ends up in setHoverCard being called for a different
           // card.
           id="canvasInner"
-          style={{ pointerEvents: isDragging ? "none" : "auto" }}
+          style={{ pointerEvents: disableMouseEnter ? "none" : "auto" }}
         >
           <AllCards cards={cards} setHoverCard={setHoverCard} />
         </div>
         <DndContext onDragEnd={updateDraggedCardPosition} onDragStart={setDragging}>
-          <Cover card={hoverCard} /><Draggable card={hoverCard} transformRef={transformRef} />
+          <Cover card={hoverCard} />
+          <Draggable card={hoverCard} canvasTransform={transform} />
         </DndContext>
       </div>
     </div>

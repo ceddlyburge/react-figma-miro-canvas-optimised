@@ -7,7 +7,7 @@ import {
 } from "@dnd-kit/core";
 import { Coordinates, DragEndEvent, Translate } from "@dnd-kit/core/dist/types";
 import { ZoomTransform, zoomIdentity } from "d3-zoom";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Addable } from "./Addable";
 import "./App.css";
 import { Canvas } from "./Canvas";
@@ -56,7 +56,7 @@ export const App = () => {
     useState<UniqueIdentifier | null>(null);
 
   // store the current transform from d3
-  const transformRef = useRef(zoomIdentity);
+  const [transform, setTransform] = useState(zoomIdentity);
 
   const addDraggedTrayCardToCanvas = useCallback(({
     over,
@@ -76,7 +76,7 @@ export const App = () => {
           active.rect.current.initial,
           over,
           delta,
-          transformRef.current
+          transform
         ),
         text: active.id.toString(),
       },
@@ -106,15 +106,15 @@ export const App = () => {
       <Canvas
         cards={cards}
         setCards={setCards}
-        transformRef={transformRef}
-      // setTransform={setTransform}
+        transform={transform}
+        setTransform={setTransform}
       />
 
       <DragOverlay>
         <div
           style={{
             transformOrigin: "top left",
-            transform: `scale(${transformRef.current?.k ?? 1})`,
+            transform: `scale(${transform.k})`,
           }}
           className="trayOverlayCard"
         >

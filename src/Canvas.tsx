@@ -4,32 +4,9 @@ import { select } from "d3-selection";
 import { ZoomTransform, zoom } from "d3-zoom";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Card } from "./App";
-import { Cover, Draggable, NonDraggable } from "./Draggable";
-
-// Always display all the cards, even when one becomes draggable, which makes it performant with memo
-// When the mouse is over a card, a Draggable is placed over the top of the NonDraggable one and hides it.
-const AllCards = memo(({
-  cards,
-  setHoverCard,
-}: {
-  cards: Card[];
-  setHoverCard(card: Card): void;
-}) => {
-  return (<>
-    {cards.map((card) => {
-      const onMouseEnter = () => {
-        setHoverCard(card);
-        console.log('onMouseEnter', card.id);
-        performance.clearMarks();
-        performance.clearMeasures();
-        performance.mark('onMouseEnterStart');
-      }
-
-      return (<NonDraggable card={card} key={card.id} onMouseEnter={onMouseEnter} />)
-    })}
-  </>)
-})
-AllCards.displayName = 'AllCards';
+import { Draggable } from "./Draggable";
+import { Cover } from "./Cover";
+import { AllCards } from "./AllCards";
 
 export const Canvas = memo(({
   cards,
@@ -57,8 +34,7 @@ export const Canvas = memo(({
 
   // remove transform from the dependencies and use a ref, this is an event so can use a ref
   // without a problem. This gives the DndContext less reasons to rerender, and means the cache 
-  // check is a bit quicker.
-  // todo: see how much of a difference this makes and whether it is worth it
+  // check is a tiny bit quicker.
   const updateDraggedCardPosition = useCallback(({ delta, active }: DragEndEvent) => {
     setIsDragging(false);
 
@@ -157,6 +133,16 @@ export const Canvas = memo(({
       // setTransform
     ]
   );
+  useEffect(() => {
+    try {
+      performance.mark('zoomingOrPanningEnd');
+      performance.measure('zoomingOrPanning', 'zoomingOrPanningStart', 'zoomingOrPanningEnd');
+      const zoomingOrPanningMeasure = performance.getEntriesByName('zoomingOrPanning')?.[0];
+      console.log('zoomingOrPanning', zoomingOrPanningMeasure?.duration);
+    } catch { }
+    performance.clearMarks();
+    performance.clearMeasures();
+  });
 
   useLayoutEffect(() => {
     if (!canvasRef.current) return;
@@ -180,16 +166,6 @@ export const Canvas = memo(({
       if (canvasInnerElement) {
         canvasInnerElement.style.pointerEvents = "auto";
       }
-
-      try {
-        performance.mark('zoomingOrPanningEnd');
-        performance.measure('zoomingOrPanning', 'zoomingOrPanningStart', 'zoomingOrPanningEnd');
-        const zoomingOrPanningMeasure = performance.getEntriesByName('zoomingOrPanning')?.[0];
-        console.log('zoomingOrPanning', zoomingOrPanningMeasure?.duration);
-      } catch { }
-      performance.clearMarks();
-      performance.clearMeasures();
-
     });
 
     // attach d3 zoom to the canvas div element, which will handle

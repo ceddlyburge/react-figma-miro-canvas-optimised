@@ -5,5 +5,5 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   // base: "./",
-  base: "/react-figma-miro-canvas-part-3/",
+  base: "/react-figma-miro-canvas-optimised/",
 });

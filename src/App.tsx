@@ -52,37 +52,11 @@ export const App = () => {
       ))
   );
 
-  // useEffect(() => {
-  //   try {
-  //     performance.mark('zoomingOrPanningEnd');
-  //     performance.measure('zoomingOrPanning', 'zoomingOrPanningStart', 'zoomingOrPanningEnd');
-  //     const zoomingOrPanningMeasure = performance.getEntriesByName('zoomingOrPanning')?.[0];
-  //     console.log('zoomingOrPanning', zoomingOrPanningMeasure?.duration);
-  //   } catch { }
-
-  //   performance.clearMarks();
-  //   performance.clearMeasures();
-  // })
-
   const [draggedTrayCardId, setDraggedTrayCardId] =
     useState<UniqueIdentifier | null>(null);
 
   // store the current transform from d3
-  // const [transform, _setTransform] = useState(zoomIdentity);
   const transformRef = useRef(zoomIdentity);
-  // const setTransform = useCallback((theTransform: ZoomTransform) => {
-  //   console.log('zoomingOrPanning');
-  //   performance.clearMarks();
-  //   performance.clearMeasures();
-  //   performance.mark('zoomingOrPanningStart');
-
-  //   const canvasElement = document.getElementById('canvas');
-  //   if (canvasElement) {
-  //     canvasElement.style.transform = `translateX(${theTransform.x}px) translateY(${theTransform.y}px) scale(${theTransform.k})`;
-  //   }
-
-  //   transformRef.current = theTransform;
-  // }, []);
 
   const addDraggedTrayCardToCanvas = useCallback(({
     over,
@@ -140,7 +114,6 @@ export const App = () => {
         <div
           style={{
             transformOrigin: "top left",
-            // todo transform: `scale(${transform.k})`,
             transform: `scale(${transformRef.current?.k ?? 1})`,
           }}
           className="trayOverlayCard"
